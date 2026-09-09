@@ -7,7 +7,7 @@ use oneclient_events::EventBus;
 
 use crate::data::{AccountKind, MinecraftAccount};
 use crate::error::{AuthError, AuthResult};
-use crate::offline::{offline_account, validate_offline_username};
+use crate::offline::{offline_account_with_uuid, validate_offline_username};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct CredentialsStore {
@@ -76,8 +76,8 @@ impl CredentialsStore {
     }
 
     pub fn add_offline_account(&mut self, username: String) -> AuthResult<MinecraftAccount> {
-        let account = self.insert_offline_account(username)?;
-        Ok(account)
+        let uuid = crate::offline::offline_uuid(&username);
+        self.insert_offline_account(username, uuid)
     }
 
     #[tracing::instrument(level = "debug", skip(self), fields(username = %username))]
@@ -85,16 +85,30 @@ impl CredentialsStore {
         &mut self,
         username: String,
     ) -> AuthResult<MinecraftAccount> {
-        let account = self.insert_offline_account(username)?;
+        let uuid = crate::offline::offline_uuid(&username);
+        let account = self.insert_offline_account(username, uuid)?;
         self.save().await?;
         Ok(account)
     }
 
-    fn insert_offline_account(&mut self, username: String) -> AuthResult<MinecraftAccount> {
-        if !self.has_microsoft_account() {
-            return Err(AuthError::OfflineRequiresMicrosoft);
-        }
+    /// `uuid` genelde [`crate::offline::resolve_offline_uuid`]'den gelir - premium
+    /// hesaplar icin gercek Mojang uuid'i, yoksa deterministik offline uuid.
+    #[tracing::instrument(level = "debug", skip(self), fields(username = %username))]
+    pub async fn add_offline_account_and_save_with_uuid(
+        &mut self,
+        username: String,
+        uuid: Uuid,
+    ) -> AuthResult<MinecraftAccount> {
+        let account = self.insert_offline_account(username, uuid)?;
+        self.save().await?;
+        Ok(account)
+    }
 
+    fn insert_offline_account(
+        &mut self,
+        username: String,
+        uuid: Uuid,
+    ) -> AuthResult<MinecraftAccount> {
         validate_offline_username(&username)?;
 
         if self
@@ -105,7 +119,7 @@ impl CredentialsStore {
             return Err(AuthError::DuplicateUsername { username });
         }
 
-        let account = offline_account(username);
+        let account = offline_account_with_uuid(username, uuid);
         self.users.insert(account.id, account.clone());
         Ok(account)
     }
@@ -178,10 +192,6 @@ impl CredentialsStore {
         let Some(account) = self.users.get(&id).cloned() else {
             return Ok(None);
         };
-
-        if account.is_offline() && !self.has_microsoft_account() {
-            return Err(AuthError::OfflineRequiresMicrosoft);
-        }
 
         Ok(Some(account))
     }

@@ -42,13 +42,63 @@ pub fn validate_offline_username(username: &str) -> AuthResult<()> {
 
 #[tracing::instrument(level = "debug", fields(username = %username))]
 pub fn offline_account(username: String) -> MinecraftAccount {
+    let uuid = offline_uuid(&username);
+    offline_account_with_uuid(username, uuid)
+}
+
+pub fn offline_account_with_uuid(username: String, uuid: Uuid) -> MinecraftAccount {
     tracing::info!("creating offline account");
     MinecraftAccount {
-        id: offline_uuid(&username),
+        id: uuid,
         username,
         access_token: String::new(),
         refresh_token: String::new(),
         expires: Utc::now() + Duration::days(3650),
         kind: AccountKind::Offline,
     }
+}
+
+/// Fxes sunucusu offline modda calisir, ikisi de kabul edilir - ama gercek
+/// (premium) bir Mojang hesabiysa skin/cape gorunsun diye asil uuid'i
+/// kullanmak deterministik offline uuid'den daha iyidir. Ag hatasi veya
+/// hesap bulunamamasi sessizce offline uuid'e duser (eski Helios launcher'in
+/// authmanager.js'teki `premiumUuid` davranisinin portu).
+#[tracing::instrument(level = "debug", skip(client), fields(username = %username))]
+pub async fn resolve_offline_uuid(client: &reqwest::Client, username: &str) -> Uuid {
+    match lookup_premium_uuid(client, username).await {
+        Some(uuid) => uuid,
+        None => offline_uuid(username),
+    }
+}
+
+async fn lookup_premium_uuid(client: &reqwest::Client, username: &str) -> Option<Uuid> {
+    #[derive(serde::Deserialize)]
+    struct Profile {
+        id: String,
+    }
+
+    let url = format!("https://api.mojang.com/users/profiles/minecraft/{username}");
+    let response = client.get(url).send().await.ok()?;
+    if !response.status().is_success() {
+        return None;
+    }
+
+    let profile: Profile = response.json().await.ok()?;
+    parse_undashed_uuid(&profile.id)
+}
+
+fn parse_undashed_uuid(raw: &str) -> Option<Uuid> {
+    if raw.len() != 32 || !raw.chars().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+
+    let dashed = format!(
+        "{}-{}-{}-{}-{}",
+        &raw[0..8],
+        &raw[8..12],
+        &raw[12..16],
+        &raw[16..20],
+        &raw[20..32]
+    );
+    Uuid::parse_str(&dashed).ok()
 }

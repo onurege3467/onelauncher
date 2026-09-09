@@ -184,10 +184,11 @@ impl AuthService {
 
 	#[tracing::instrument(skip(self), fields(username = %username))]
 	pub async fn add_offline_account(&self, username: String) -> AuthResult<MinecraftAccount> {
+		let uuid = crate::offline::resolve_offline_uuid(self.net.http(), &username).await;
 		self.store
 			.lock()
 			.await
-			.add_offline_account_and_save(username)
+			.add_offline_account_and_save_with_uuid(username, uuid)
 			.await
 	}
 
@@ -298,10 +299,6 @@ impl AuthService {
 	#[tracing::instrument(level = "debug", skip(self), fields(%id))]
 	pub async fn account_for_launch(&self, id: Uuid) -> AuthResult<MinecraftAccount> {
 		let account = self.renew_token(id, false).await?;
-
-		if account.is_offline() && !self.has_microsoft_account().await {
-			return Err(AuthError::OfflineRequiresMicrosoft);
-		}
 
 		Ok(account)
 	}
