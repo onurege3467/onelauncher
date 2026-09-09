@@ -76,13 +76,13 @@ windows = { version = "=0.62.2", features = [
 winresource = "=0.1.31"
 
 [package.metadata.packager]
-product-name = "OneClient"
-identifier = "org.polyfrost.OneClient"
+product-name = "Fxes Launcher"
+identifier = "com.fxes.launcher"
 category = "Game"
-publisher = "Polyfrost Inc."
-copyright = "© 2026 Polyfrost Inc."
-homepage = "https://polyfrost.org/projects/oneclient"
-long-description = "Next-generation open source Minecraft launcher"
+publisher = "Onur"
+copyright = "© 2026 Onur"
+homepage = "https://github.com/onurege3467/onelauncher"
+long-description = "Fxes sunucusu icin ozel Minecraft launcher"
 formats = ["nsis", "app", "dmg", "deb", "appimage"]
 binaries = [{ path = "oneclient_app", main = true }]
 icons = [
