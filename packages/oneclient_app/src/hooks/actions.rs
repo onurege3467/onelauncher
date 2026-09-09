@@ -303,7 +303,7 @@ impl Actions {
         if was_declined {
             self.notify("Restart to finish")
                 .body(
-                    "Thanks. OneClient reconnects to Polyfrost services the next time you start \
+                    "Thanks. Fxes Launcher reconnects to Polyfrost services the next time you start \
                      it.",
                 )
                 .icon(IconType::RefreshCw01)
@@ -1201,7 +1201,7 @@ impl Actions {
                 tracing::error!("move skipped, launcher not ready: {err:#}");
                 self.write_relocation(RelocationState {
                     plan: Some(plan),
-                    result: Some(Err(format!("OneClient is not ready yet: {err}"))),
+                    result: Some(Err(format!("Fxes Launcher is not ready yet: {err}"))),
                     ..RelocationState::default()
                 });
                 return;

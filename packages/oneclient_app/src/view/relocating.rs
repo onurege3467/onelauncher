@@ -66,7 +66,7 @@ fn copying(plan: &RelocationPlan, copied: u64, total: u64) -> Element {
                 .color(colors::fg_secondary()),
         )
         .child(note(
-            "Leave OneClient open until this finishes. Nothing is removed from the old folder, \
+            "Leave Fxes Launcher open until this finishes. Nothing is removed from the old folder, \
              and the launcher stays closed to everything else while files are copied."
                 .to_string(),
             colors::brand(),
@@ -76,7 +76,7 @@ fn copying(plan: &RelocationPlan, copied: u64, total: u64) -> Element {
 
 fn moved(outcome: &RelocationOutcome, actions: Actions) -> Element {
     let mut body = format!(
-        "{} copied to {}. OneClient keeps running from the old folder until you restart it.",
+        "{} copied to {}. Fxes Launcher keeps running from the old folder until you restart it.",
         format_bytes(outcome.bytes),
         outcome.to.display()
     );
@@ -114,7 +114,7 @@ fn moved(outcome: &RelocationOutcome, actions: Actions) -> Element {
                                 platform.close_window(window.id());
                             });
                         })
-                        .text("Quit OneClient"),
+                        .text("Quit Fxes Launcher"),
                 ),
         )
         .into_element()
@@ -126,7 +126,7 @@ fn failed(message: String, actions: Actions) -> Element {
         .child(note(message, colors::danger()))
         .child(
             label()
-                .text("Nothing was changed. OneClient is still running from its current folder.")
+                .text("Nothing was changed. Fxes Launcher is still running from its current folder.")
                 .font_size(12.)
                 .max_lines(2)
                 .color(colors::fg_secondary()),

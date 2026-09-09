@@ -278,7 +278,7 @@ fn path_content_width(path: &str) -> f32 {
 #[derive(Clone, PartialEq)]
 struct PendingRemove {
     path: String,
-    /// Whether the files live in OneClient's own java dir, which is the only
+    /// Whether the files live in Fxes Launcher's own java dir, which is the only
     /// case where removal takes them off disk
     managed: bool,
 }
@@ -292,9 +292,9 @@ fn confirm_remove_modal(
     let remove_path = path.clone();
 
     let consequence = if managed {
-        "This runtime is managed by OneClient. It's files WILL be deleted."
+        "This runtime is managed by Fxes Launcher. It's files WILL be deleted."
     } else {
-        "This runtime is not managed by OneClient. It's files will not be deleted."
+        "This runtime is not managed by Fxes Launcher. It's files will not be deleted."
     };
 
     let confirm = if managed {
