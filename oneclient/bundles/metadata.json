@@ -1,0 +1,12 @@
+{
+  "versions": {
+    "1.21.11": {
+      "fabric": [
+        {
+          "path": "/oneclient/bundles/fxes-1.21.11-fabric.mrpack",
+          "sha1": "a9f9b2299fbb3f5f030f7d24b91d82b7666964d9"
+        }
+      ]
+    }
+  }
+}
