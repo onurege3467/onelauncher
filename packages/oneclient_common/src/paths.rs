@@ -5,14 +5,14 @@ use std::sync::OnceLock;
 use crate::domain::{ContentType, ProviderId};
 use crate::error::{PathsError, PathsResult};
 
-const QUALIFIER: &str = "org";
-const ORGANIZATION: &str = "Polyfrost";
+const QUALIFIER: &str = "com";
+const ORGANIZATION: &str = "Fxes";
 
 #[cfg(not(debug_assertions))]
-const APPLICATION: &str = "OneClient";
+const APPLICATION: &str = "Fxes Launcher";
 
 #[cfg(debug_assertions)]
-const APPLICATION: &str = "OneClient-dev";
+const APPLICATION: &str = "Fxes Launcher-dev";
 
 const SETTINGS_FILE: &str = "settings.json";
 
@@ -232,7 +232,7 @@ mod tests {
 		assert_eq!(
 			tail,
 			vec![OsStr::new(APPLICATION), OsStr::new(ORGANIZATION)],
-			"every Polyfrost product shares one folder and takes a single name inside it"
+			"every Fxes product shares one folder and takes a single name inside it"
 		);
 	}
 
@@ -250,9 +250,9 @@ mod tests {
 	#[test]
 	fn a_debug_build_never_shares_a_folder_with_a_release_one() {
 		assert_eq!(APPLICATION, if cfg!(debug_assertions) {
-			"OneClient-dev"
+			"Fxes Launcher-dev"
 		} else {
-			"OneClient"
+			"Fxes Launcher"
 		});
 	}
 }

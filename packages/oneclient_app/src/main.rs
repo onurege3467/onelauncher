@@ -125,7 +125,28 @@ fn main() {
     let was_damaged = oneclient_common::paths::damaged_settings_file()
         .map(|path| path.exists())
         .unwrap_or(false);
-    let needs_location = never_set_up && !has_database && !was_damaged;
+    let fresh_install = never_set_up && !has_database && !was_damaged;
+
+    // Fxes dagitir tek sunucuya baglanir, klasor secimi anlamsiz: varsayilan
+    // konumu otomatik uygula, kullaniciya hicbir zaman sorma. Coklu adimli
+    // stok onboarding (hosgeldin/klasor/sozlesme) de aynı sebeple atlanir,
+    // dogrudan Home'a inilir.
+    if fresh_install {
+        if let Err(err) = rt.block_on(oneclient_core::settings::data_dir::apply(None)) {
+            tracing::error!("default data dir setup failed: {err}");
+        }
+        let skip_onboarding = rt.block_on(async {
+            let mut settings = oneclient_core::settings::store::load_settings(None).await;
+            settings.seen_onboarding = true;
+            settings.accepted_tos_version = settings.accepted_tos_version.max(1);
+            settings.accepted_privacy_version = settings.accepted_privacy_version.max(1);
+            oneclient_core::settings::store::save_settings(&settings).await
+        });
+        if let Err(err) = skip_onboarding {
+            tracing::error!("onboarding auto-skip failed: {err}");
+        }
+    }
+    let needs_location = false;
 
     let mut unprotected = None;
     let ipc = match rt.block_on(ipc::claim(&cli)) {

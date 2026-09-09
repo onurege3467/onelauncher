@@ -54,6 +54,13 @@ pub async fn ensure_from_bundles(state: &LauncherState) -> LauncherResult<Vec<Cl
                     loader = %cluster.mc_loader,
                     "created cluster from bundle catalog"
                 );
+                if let Err(err) = subscribe_to_catalog_bundles(state, &cluster, loader).await {
+                    tracing::warn!(
+                        cluster_id = cluster.id,
+                        error = %err,
+                        "failed to auto-subscribe new cluster to its bundle catalog"
+                    );
+                }
                 created.push(cluster);
             }
             Ok(None) => {}
@@ -69,6 +76,34 @@ pub async fn ensure_from_bundles(state: &LauncherState) -> LauncherResult<Vec<Cl
     }
 
     Ok(created)
+}
+
+/// Tek sunucu dagitimi kullaniciya "bu modpacki ekle" adimi sormaz: otomatik
+/// olusan cluster, katalogdaki her bundle'a hemen abone olur (bos bir
+/// override satiri paket listesini "eligible" yapmaya yeter, bkz.
+/// `addition_eligible_bundles`), yoksa ilk sync additions=0 dondurup hicbir
+/// mod inmez.
+async fn subscribe_to_catalog_bundles(
+    state: &LauncherState,
+    cluster: &Cluster,
+    loader: GameLoader,
+) -> LauncherResult<()> {
+    let ctx = state.services.content();
+    for archive in state
+        .bundles
+        .archives_for(&ctx, &cluster.mc_version, loader)
+        .await?
+    {
+        crate::set_bundle_package_opt_in(
+            cluster.id,
+            &archive.manifest.name,
+            "__fxes_auto_subscribe__",
+            true,
+            &ctx,
+        )
+        .await?;
+    }
+    Ok(())
 }
 
 #[tracing::instrument(skip(state))]
